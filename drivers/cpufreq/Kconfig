@@ -223,4 +223,12 @@ config CPU_FREQ_GOV_CONSERVATIVE
 
 	  If in doubt, say N.
 
+config VDD_USERSPACE
+	bool "VDD sysfs interface"
+	default n
+	depends on CPU_FREQ_STAT
+	help
+	  exposes the VDD table to userspace
+	  allows users to adjust voltages on the fly
+
 endif	# CPU_FREQ
