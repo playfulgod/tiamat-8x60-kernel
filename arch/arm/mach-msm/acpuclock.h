@@ -19,6 +19,9 @@
 #ifndef __ARCH_ARM_MACH_MSM_ACPUCLOCK_H
 #define __ARCH_ARM_MACH_MSM_ACPUCLOCK_H
 
+#define VOLTAGE_MIN  700000	/* mV */
+#define VOLTAGE_MAX  1450000	/* mV */
+
 /**
  * enum setrate_reason - Reasons for use with acpuclk_set_rate()
  */
