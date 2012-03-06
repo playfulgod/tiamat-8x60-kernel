@@ -1315,7 +1315,7 @@ static struct msm_camera_sensor_flash_src msm_flash_src = {
 
 static struct camera_flash_cfg msm_camera_sensor_flash_cfg = {
 	.low_temp_limit		= 5,
-	.low_cap_limit		= 15,
+	.low_cap_limit		= 5,
 };
 
 #ifdef CONFIG_S5K3H2YX
@@ -6008,4 +6008,3 @@ MACHINE_START(RUBY, "ruby")
 	.init_machine = ruby_init,
 	.timer = &msm_timer,
 MACHINE_END
-
