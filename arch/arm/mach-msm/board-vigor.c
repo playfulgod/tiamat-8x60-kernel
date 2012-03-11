@@ -1575,7 +1575,7 @@ static struct camera_flash_info msm_camera_sensor_flash_info = {
 
 static struct camera_flash_cfg msm_camera_sensor_flash_cfg = {
 	.low_temp_limit		= 5,
-	.low_cap_limit		= 15,
+	.low_cap_limit		= 5,
 	.flash_info             = &msm_camera_sensor_flash_info,    /* HTC jason 20110811 */
 };
 
