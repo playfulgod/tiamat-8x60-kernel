@@ -2171,7 +2171,7 @@ static void __init msm8x60_init_dsps(void)
 #else /* CONFIG_FB_MSM_HDMI_MSM_PANEL */
 #define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + 0x313800 + MSM_FB_DSUB_PMEM_ADDER, 4096)
 #endif /* CONFIG_FB_MSM_HDMI_MSM_PANEL */
-#define MSM_PMEM_SF_SIZE 0x1000000 /* 16 Mbytes */
+#define MSM_PMEM_SF_SIZE 0x4000000 /* 64 Mbytes */
 #define MSM_PMEM_RMT_STORAGE_SIZE 0x100000 /* 1 Mbytes */
 
 #define MSM_PMEM_ADSP_SIZE         0x3300000
@@ -2553,7 +2553,7 @@ static void __init msm8x60_allocate_memory_regions(void)
 
 	size = MSM_PMEM_AUDIO_SIZE;
 	if (size) {
-		android_pmem_audio_pdata.start = MSM_PMEM_AUDIO_BASE;
+		android_pmem_audio_pdata.start = MSM_PMEM_AUDIO_BASE + 0x10000000;
 		android_pmem_audio_pdata.size = size;
 		pr_info("allocating %lu bytes at %p (%lx physical) for audio "
 			"pmem arena\n", size, __va(android_pmem_audio_pdata.start),
@@ -2562,7 +2562,7 @@ static void __init msm8x60_allocate_memory_regions(void)
 
 	size = pmem_sf_size;
 	if (size) {
-		android_pmem_pdata.start = MSM_PMEM_SF_BASE;
+		android_pmem_pdata.start = MSM_PMEM_SF_BASE + 0x10000000;
 		android_pmem_pdata.size = size;
 		pr_info("allocating %lu bytes at %p (%lx physical) for sf "
 			"pmem arena\n", size,  __va(android_pmem_pdata.start),
