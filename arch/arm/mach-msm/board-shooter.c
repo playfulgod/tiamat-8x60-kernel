@@ -1866,19 +1866,14 @@ static void __init msm8x60_init_dsps(void)
  * Note: must be multiple of 4096 */
 #define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + 0x195000 + MSM_FB_DSUB_PMEM_ADDER, 4096)
 #else /* CONFIG_FB_MSM_HDMI_MSM_PANEL */
-#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + MSM_FB_DSUB_PMEM_ADDER, 4096) 
+#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + MSM_FB_DSUB_PMEM_ADDER, 4096)
 #endif /* CONFIG_FB_MSM_HDMI_MSM_PANEL */
+
 #define MSM_PMEM_SF_SIZE 0x4000000 /* 64 Mbytes */
 #define MSM_OVERLAY_BLT_SIZE	roundup(0x500000, 4096)
 
-#define MSM_PMEM_ADSP_SIZE         0x2000000
+#define MSM_PMEM_ADSP_SIZE         0x3300000
 #define MSM_PMEM_AUDIO_SIZE        0x239000
-
-#define MSM_PMEM_SF_BASE		(0x70000000 - MSM_PMEM_SF_SIZE)
-#define MSM_OVERLAY_BLT_BASE	(MSM_PMEM_SF_BASE - MSM_OVERLAY_BLT_SIZE)
-#define MSM_PMEM_AUDIO_BASE	(MSM_OVERLAY_BLT_BASE - MSM_PMEM_AUDIO_SIZE)
-#define MSM_PMEM_ADSP_BASE	(0x40400000)
-#define MSM_FB_BASE	(MSM_PMEM_ADSP_BASE + MSM_PMEM_ADSP_SIZE)
 
 #define MSM_SMI_BASE          0x38000000
 /* Kernel SMI PMEM Region for video core, used for Firmware */
@@ -2118,23 +2113,23 @@ static struct platform_device hdmi_msm_device = {
 
 static void __init msm8x60_allocate_memory_regions(void)
 {
+	void *addr;
 	unsigned long size;
 
 	size = MSM_FB_SIZE;
-	msm_fb_resources[0].start = MSM_FB_BASE;
+	addr = alloc_bootmem(size);
+	msm_fb_resources[0].start = __pa(addr);
 	msm_fb_resources[0].end = msm_fb_resources[0].start + size - 1;
 	pr_info("allocating %lu bytes at %p (%lx physical) for fb\n",
-		size, __va(MSM_FB_BASE), (unsigned long)MSM_FB_BASE);
+		size, addr, __pa(addr));
 
-	msm_fb_resources[1].start = MSM_OVERLAY_BLT_BASE;
-	if (mem_size_mb == 1024)
-			msm_fb_resources[1].start += 0x10000000;
+	addr = alloc_bootmem(MSM_OVERLAY_BLT_SIZE);
+	msm_fb_resources[1].start = __pa(addr);
 	msm_fb_resources[1].end = msm_fb_resources[1].start +
 		MSM_OVERLAY_BLT_SIZE - 1;
-	pr_info("allocating %lu bytes at %p (%lx physical) for "
+	pr_info("allocating %lu bytes at %p (%lx physical) for"
 		"overlay write back\n", (unsigned long)MSM_OVERLAY_BLT_SIZE,
-		__va(msm_fb_resources[1].start),
-		(unsigned long)msm_fb_resources[1].start);
+		addr, __pa(addr));
 
 #ifdef CONFIG_KERNEL_PMEM_SMI_REGION
 	size = PMEM_KERNEL_SMI_SIZE;
@@ -2150,11 +2145,11 @@ static void __init msm8x60_allocate_memory_regions(void)
 #ifdef CONFIG_ANDROID_PMEM
 	size = pmem_adsp_size;
 	if (size) {
-		android_pmem_adsp_pdata.start = MSM_PMEM_ADSP_BASE;
+		addr = alloc_bootmem(size);
+		android_pmem_adsp_pdata.start = __pa(addr);
 		android_pmem_adsp_pdata.size = size;
 		pr_info("allocating %lu bytes at %p (%lx physical) for adsp "
-			"pmem arena\n", size, __va(MSM_PMEM_ADSP_BASE),
-			(unsigned long)MSM_PMEM_ADSP_BASE);
+			"pmem arena\n", size, addr, __pa(addr));
 	}
 
 	size = MSM_PMEM_SMIPOOL_SIZE;
@@ -2168,24 +2163,20 @@ static void __init msm8x60_allocate_memory_regions(void)
 
 	size = MSM_PMEM_AUDIO_SIZE;
 	if (size) {
-		android_pmem_audio_pdata.start = MSM_PMEM_AUDIO_BASE;
-		if (mem_size_mb == 1024)
-			android_pmem_audio_pdata.start += 0x10000000;
+		addr = alloc_bootmem(size);
+		android_pmem_audio_pdata.start = __pa(addr);
 		android_pmem_audio_pdata.size = size;
 		pr_info("allocating %lu bytes at %p (%lx physical) for audio "
-			"pmem arena\n", size, __va(android_pmem_audio_pdata.start),
-			(unsigned long)android_pmem_audio_pdata.start);
+			"pmem arena\n", size, addr, __pa(addr));
 	}
 
 	size = pmem_sf_size;
 	if (size) {
-		android_pmem_pdata.start = MSM_PMEM_SF_BASE;
-		if (mem_size_mb == 1024)
-			android_pmem_pdata.start += 0x10000000;
+		addr = alloc_bootmem(size);
+		android_pmem_pdata.start = __pa(addr);
 		android_pmem_pdata.size = size;
 		pr_info("allocating %lu bytes at %p (%lx physical) for sf "
-			"pmem arena\n", size,  __va(android_pmem_pdata.start),
-			(unsigned long)android_pmem_pdata.start);
+			"pmem arena\n", size, addr, __pa(addr));
 	}
 #endif
 

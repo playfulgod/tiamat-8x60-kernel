@@ -2162,25 +2162,21 @@ static void __init msm8x60_init_dsps(void)
 /* prim = 1024 x 600 x 4(bpp) x 2(pages)
  * hdmi = 1920 x 1080 x 2(bpp) x 1(page)
  * Note: must be multiple of 4096 */
-#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + 0x3F4800 + 0x546000, 4096)
+#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + 0x3F4800 + MSM_FB_DSUB_PMEM_ADDER, 4096)
 #elif defined(CONFIG_FB_MSM_TVOUT)
 /* prim = 1024 x 600 x 4(bpp) x 2(pages)
  * tvout = 720 x 576 x 2(bpp) x 2(pages)
  * Note: must be multiple of 4096 */
 #define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + 0x195000 + MSM_FB_DSUB_PMEM_ADDER, 4096)
 #else /* CONFIG_FB_MSM_HDMI_MSM_PANEL */
-#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + 0x313800 + MSM_FB_DSUB_PMEM_ADDER, 4096)
+#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + MSM_FB_DSUB_PMEM_ADDER, 4096)
 #endif /* CONFIG_FB_MSM_HDMI_MSM_PANEL */
+
 #define MSM_PMEM_SF_SIZE 0x4000000 /* 64 Mbytes */
 #define MSM_PMEM_RMT_STORAGE_SIZE 0x100000 /* 1 Mbytes */
 
 #define MSM_PMEM_ADSP_SIZE         0x3300000
 #define MSM_PMEM_AUDIO_SIZE        0x239000
-
-#define MSM_PMEM_ADSP_BASE	(0x80000000 - MSM_PMEM_ADSP_SIZE)
-#define MSM_PMEM_SF_BASE	(0x40400000)
-#define MSM_PMEM_AUDIO_BASE	(MSM_PMEM_SF_BASE + MSM_PMEM_SF_SIZE)
-#define MSM_FB_BASE		(MSM_PMEM_AUDIO_BASE + MSM_PMEM_AUDIO_SIZE)
 
 #define MSM_SMI_BASE          0x38000000
 /* Kernel SMI PMEM Region for video core, used for Firmware */
@@ -2202,7 +2198,6 @@ static int __init fb_size_setup(char *p)
 	return 0;
 }
 early_param("fb_size", fb_size_setup);
-
 
 #ifdef CONFIG_ANDROID_PMEM
 static unsigned pmem_sf_size = MSM_PMEM_SF_SIZE;
@@ -2353,7 +2348,6 @@ static struct platform_device wifi_bt_slp_clk = {
 };
 #endif
 
-
 #ifdef CONFIG_KERNEL_PMEM_SMI_REGION
 static struct android_pmem_platform_data android_pmem_kernel_smi_pdata = {
 	.name = PMEM_KERNEL_SMI_DATA_NAME,
@@ -2444,6 +2438,7 @@ void *pmem_setup_smi_region(void)
 {
 	return (void *)msm_bus_scale_register_client(&smi_client_pdata);
 }
+
 static struct android_pmem_platform_data android_pmem_smipool_pdata = {
 	.name = "pmem_smipool",
 	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
@@ -2509,11 +2504,11 @@ static void __init msm8x60_allocate_memory_regions(void)
 	unsigned long size;
 
 	size = MSM_FB_SIZE;
-	msm_fb_resources[0].start = MSM_FB_BASE;
+	addr = alloc_bootmem(size);
+	msm_fb_resources[0].start = __pa(addr);
 	msm_fb_resources[0].end = msm_fb_resources[0].start + size - 1;
 	pr_info("allocating %lu bytes at %p (%lx physical) for fb\n",
-		size, __va(msm_fb_resources[0].start),
-		(unsigned long)msm_fb_resources[0].start);
+		size, addr, __pa(addr));
 
 	addr = alloc_bootmem(MSM_PMEM_RMT_STORAGE_SIZE);
 	pr_info("allocating %d bytes at %p (0x%lx physical) for "
@@ -2535,11 +2530,11 @@ static void __init msm8x60_allocate_memory_regions(void)
 #ifdef CONFIG_ANDROID_PMEM
 	size = pmem_adsp_size;
 	if (size) {
-		android_pmem_adsp_pdata.start = MSM_PMEM_ADSP_BASE;
+		addr = alloc_bootmem(size);
+		android_pmem_adsp_pdata.start = __pa(addr);
 		android_pmem_adsp_pdata.size = size;
 		pr_info("allocating %lu bytes at %p (%lx physical) for adsp "
-			"pmem arena\n", size, __va(android_pmem_adsp_pdata.start),
-			(unsigned long)android_pmem_adsp_pdata.start);
+			"pmem arena\n", size, addr, __pa(addr));
 	}
 
 	size = MSM_PMEM_SMIPOOL_SIZE;
@@ -2553,20 +2548,20 @@ static void __init msm8x60_allocate_memory_regions(void)
 
 	size = MSM_PMEM_AUDIO_SIZE;
 	if (size) {
-		android_pmem_audio_pdata.start = MSM_PMEM_AUDIO_BASE + 0x10000000;
+		addr = alloc_bootmem(size);
+		android_pmem_audio_pdata.start = __pa(addr);
 		android_pmem_audio_pdata.size = size;
 		pr_info("allocating %lu bytes at %p (%lx physical) for audio "
-			"pmem arena\n", size, __va(android_pmem_audio_pdata.start),
-			(unsigned long)android_pmem_audio_pdata.start);
+			"pmem arena\n", size, addr, __pa(addr));
 	}
 
 	size = pmem_sf_size;
 	if (size) {
-		android_pmem_pdata.start = MSM_PMEM_SF_BASE + 0x10000000;
+		addr = alloc_bootmem(size);
+		android_pmem_pdata.start = __pa(addr);
 		android_pmem_pdata.size = size;
 		pr_info("allocating %lu bytes at %p (%lx physical) for sf "
-			"pmem arena\n", size,  __va(android_pmem_pdata.start),
-			(unsigned long)android_pmem_pdata.start);
+			"pmem arena\n", size, addr, __pa(addr));
 	}
 #endif
 }
